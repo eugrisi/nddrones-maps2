@@ -25,7 +25,7 @@ const defaultCustom = {
 
 const Index = () => {
   const isMobile = useIsMobile();
-  const [selectedEstado, setSelectedEstado] = useState('MG');
+  const [selectedEstado, setSelectedEstado] = useState('');
   const [selectedCidade, setSelectedCidade] = useState('');
   const [selectedReseller, setSelectedReseller] = useState<Reseller | null>(null);
   const [suggestion, setSuggestion] = useState<Reseller | null>(null);

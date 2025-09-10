@@ -64,12 +64,12 @@ const Admin = () => {
     address: '',
     phone: '',
     email: '',
-    position: [-18.5833, -46.5167],
+    position: [-15.7939, -47.8828],
     type: 'Unidade Regional',
     website: '',
     description: '',
     photo: undefined,
-    coverageRadius: 100,
+    coverageRadius: 0,
     showCoverage: false,
     state: '',
     city: ''
@@ -198,12 +198,12 @@ const Admin = () => {
       address: '',
       phone: '',
       email: '',
-      position: [-18.5833, -46.5167],
+      position: [-15.7939, -47.8828],
       type: 'Unidade Regional',
       website: '',
       description: '',
       photo: undefined,
-      coverageRadius: 100,
+      coverageRadius: 0,
       showCoverage: false,
       state: '',
       city: ''
@@ -223,7 +223,7 @@ const Admin = () => {
       website: reseller.website || '',
       description: reseller.description || '',
       photo: reseller.photo,
-      coverageRadius: reseller.coverageRadius || 100,
+      coverageRadius: reseller.coverageRadius || 0,
       showCoverage: reseller.showCoverage || false,
       state: reseller.state || '',
       city: reseller.city || ''
@@ -863,10 +863,10 @@ const Admin = () => {
                   <Input
                     id="coverageRadius"
                     value={formData.coverageRadius || ''}
-                    onChange={(e) => setFormData({...formData, coverageRadius: parseInt(e.target.value) || undefined})}
-                    placeholder="100"
+                    onChange={(e) => setFormData({...formData, coverageRadius: parseInt(e.target.value) || 0})}
+                    placeholder="0 (desabilitado)"
                     type="number"
-                    min="1"
+                    min="0"
                   />
                 </div>
                 

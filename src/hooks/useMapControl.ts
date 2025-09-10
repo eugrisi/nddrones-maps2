@@ -33,8 +33,8 @@ const stateData = {
 
 export const useMapControl = ({ resellers }: UseMapControlProps): UseMapControlReturn => {
   const [mapState, setMapState] = useState<MapState>({
-    center: [-18.5833, -46.5167],
-    zoom: 7,
+    center: [-15.7939, -47.8828],
+    zoom: 6,
     filteredResellers: resellers
   });
 
@@ -50,7 +50,7 @@ export const useMapControl = ({ resellers }: UseMapControlProps): UseMapControlR
 
   // Função para calcular o centro geográfico de múltiplas posições
   const calculateBounds = (positions: [number, number][]) => {
-    if (positions.length === 0) return { center: [-18.5833, -46.5167] as [number, number], zoom: 7 };
+    if (positions.length === 0) return { center: [-15.7939, -47.8828] as [number, number], zoom: 6 };
     
     const lats = positions.map(pos => pos[0]);
     const lngs = positions.map(pos => pos[1]);
