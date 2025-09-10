@@ -58,6 +58,7 @@ const Admin = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'Sede Principal' | 'Unidade Regional'>('all');
   const [showCoverageFilter, setShowCoverageFilter] = useState<'all' | 'with' | 'without'>('all');
+  const [emailError, setEmailError] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     name: '',
     address: '',
@@ -208,6 +209,7 @@ const Admin = () => {
       city: ''
     });
     setEditingReseller(null);
+    setEmailError(false);
   };
 
   const handleEdit = (reseller: Reseller) => {
@@ -232,6 +234,19 @@ const Admin = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validação do campo email
+    if (!formData.email || formData.email.trim() === '') {
+      setEmailError(true);
+      toast({
+        title: "Campo obrigatório",
+        description: "Por favor, preencha o campo de email.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setEmailError(false);
     
     try {
       if (editingReseller) {
@@ -690,14 +705,23 @@ const Admin = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">E-mail</Label>
+                  <Label htmlFor="email" className={`text-sm font-medium ${emailError ? 'text-red-600' : 'text-gray-700'}`}>E-mail *</Label>
                   <Input
                     id="email"
                     value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    onChange={(e) => {
+                      setFormData({...formData, email: e.target.value});
+                      if (emailError && e.target.value.trim() !== '') {
+                        setEmailError(false);
+                      }
+                    }}
                     placeholder="contato@nddrones.com"
                     type="email"
+                    className={emailError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
                   />
+                  {emailError && (
+                    <p className="text-sm text-red-600 mt-1">Este campo é obrigatório</p>
+                  )}
                 </div>
                 
                 <div>
