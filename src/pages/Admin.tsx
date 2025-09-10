@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { ImageUpload } from '@/components/ui/image-upload';
@@ -270,9 +270,10 @@ const Admin = () => {
       setIsDialogOpen(false);
       
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Erro ao salvar unidade. Tente novamente.";
       toast({
         title: "Erro",
-        description: "Erro ao salvar unidade. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -629,6 +630,9 @@ const Admin = () => {
             <DialogTitle className="text-xl font-semibold text-gray-900">
               {editingReseller ? 'Editar Unidade' : 'Nova Unidade'}
             </DialogTitle>
+            <DialogDescription>
+              {editingReseller ? 'Edite as informações da unidade selecionada.' : 'Preencha os dados para cadastrar uma nova unidade.'}
+            </DialogDescription>
           </DialogHeader>
           
           <form onSubmit={handleSubmit} className="space-y-6">

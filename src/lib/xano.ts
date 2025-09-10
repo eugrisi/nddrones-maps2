@@ -116,16 +116,25 @@ class XanoAPI {
   }
 
   async createReseller(reseller: Omit<XanoReseller, 'id' | 'created_at'>): Promise<XanoReseller> {
-    // Primeiro, criar o usuário com apenas name e email (campos aceitos pelo POST)
-    const basicUser = {
-      name: reseller.name,
-      email: reseller.email
-    };
-    
-    const createdUser = await this.request<XanoReseller>('/user', {
-      method: 'POST',
-      body: JSON.stringify(basicUser),
-    });
+    try {
+      // Verificar se já existe um usuário com este email
+      const existingUsers = await this.getResellers();
+      const emailExists = existingUsers.some(user => user.email === reseller.email);
+      
+      if (emailExists) {
+        throw new Error(`Já existe um usuário cadastrado com o email: ${reseller.email}`);
+      }
+      
+      // Primeiro, criar o usuário com apenas name e email (campos aceitos pelo POST)
+      const basicUser = {
+        name: reseller.name,
+        email: reseller.email
+      };
+      
+      const createdUser = await this.request<XanoReseller>('/user', {
+        method: 'POST',
+        body: JSON.stringify(basicUser),
+      });
     
     // Se há campos adicionais, atualizar o usuário com PATCH
     const additionalFields = {
@@ -160,6 +169,14 @@ class XanoAPI {
     }
     
     return createdUser;
+    } catch (error) {
+      // Se o erro for de duplicação do Xano, lançar uma mensagem mais amigável
+      if (error instanceof Error && error.message.includes('Duplicate record')) {
+        throw new Error(`Email já cadastrado: ${reseller.email}. Por favor, use um email diferente.`);
+      }
+      // Re-lançar outros erros
+      throw error;
+    }
   }
 
   async updateReseller(id: number, reseller: Partial<XanoReseller>): Promise<XanoReseller> {
