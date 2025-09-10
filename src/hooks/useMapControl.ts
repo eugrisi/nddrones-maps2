@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Reseller } from '@/data/mockData';
+import { Reseller } from '@/types/reseller';
 
 interface MapState {
   center: [number, number];
@@ -91,7 +91,7 @@ export const useMapControl = ({ resellers }: UseMapControlProps): UseMapControlR
   // Foco em um estado
   const focusOnState = (state: string) => {
     const stateInfo = stateData[state as keyof typeof stateData];
-    const stateResellers = resellers.filter(r => r.address.includes(state));
+    const stateResellers = resellers.filter(r => r.state === state);
     
     if (stateInfo) {
       setMapState({
@@ -125,7 +125,7 @@ export const useMapControl = ({ resellers }: UseMapControlProps): UseMapControlR
       });
     } else {
       // Se não há resellers na cidade, tenta encontrar a cidade mais próxima
-      const stateResellers = resellers.filter(r => r.address.includes(state));
+      const stateResellers = resellers.filter(r => r.state === state);
       if (stateResellers.length > 0) {
         const bounds = calculateBounds(stateResellers.map(r => r.position));
         setMapState({
@@ -151,18 +151,17 @@ export const useMapControl = ({ resellers }: UseMapControlProps): UseMapControlR
 
   // Filtrar por localização
   const filterByLocation = (state?: string, city?: string) => {
-    let filtered = resellers;
-
-    if (state) {
-      filtered = filtered.filter(r => r.address.includes(state));
+    if (!state) {
+      showAllResellers();
+      return;
     }
 
-    if (city) {
-      filtered = filtered.filter(r => 
-        r.address.toLowerCase().includes(city.toLowerCase())
-      );
-    }
-
+    const filtered = resellers.filter(r => {
+      const matchesState = r.state === state;
+      const matchesCity = !city || r.city?.toLowerCase().includes(city.toLowerCase());
+      return matchesState && matchesCity;
+    });
+    
     if (filtered.length > 0) {
       const bounds = calculateBounds(filtered.map(r => r.position));
       setMapState({
@@ -205,4 +204,4 @@ export const useMapControl = ({ resellers }: UseMapControlProps): UseMapControlR
     filterByLocation,
     customFocus
   };
-}; 
+};

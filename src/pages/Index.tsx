@@ -5,7 +5,7 @@ import { useResellers } from '@/hooks/useResellers';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useMapControl } from '@/hooks/useMapControl';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Reseller } from '@/data/mockData';
+import { Reseller } from '@/types/reseller';
 import L from 'leaflet';
 
 const estadosCidades = [
@@ -25,7 +25,7 @@ const defaultCustom = {
 
 const Index = () => {
   const isMobile = useIsMobile();
-  const [selectedEstado, setSelectedEstado] = useState('');
+  const [selectedEstado, setSelectedEstado] = useState('MG');
   const [selectedCidade, setSelectedCidade] = useState('');
   const [selectedReseller, setSelectedReseller] = useState<Reseller | null>(null);
   const [suggestion, setSuggestion] = useState<Reseller | null>(null);
@@ -49,18 +49,17 @@ const Index = () => {
     customFocus
   } = useMapControl({ resellers });
 
-  // Extrair estados únicos dos endereços das unidades
+  // Extrair estados únicos dos resellers
   const estadosDisponiveis = Array.from(new Set(
-    resellers.map(r => r.address.split(',').pop()?.trim()).filter(Boolean)
+    resellers.map(r => r.state).filter(Boolean)
   )).map(estado => ({ estado, label: estado }));
 
-  // Extrair cidades cobertas do estado selecionado
+  // Extrair cidades do estado selecionado
   const cidadesDisponiveis = selectedEstado 
     ? Array.from(new Set(
         resellers
-          .filter(r => r.address.includes(selectedEstado))
-          .flatMap(r => r.coveredCities || [])
-          .map(city => city.split(',')[0].trim())
+          .filter(r => r.state === selectedEstado)
+          .map(r => r.city)
           .filter(Boolean)
       )).sort()
     : [];
@@ -170,7 +169,7 @@ const Index = () => {
     if (cidade && selectedEstado) {
       // Verificar se a cidade tem cobertura
       const coveringUnits = resellers.filter(r => 
-        r.address.includes(selectedEstado) &&
+        r.state === selectedEstado &&
         r.coveredCities?.some(coveredCity => 
           coveredCity.toLowerCase().includes(cidade.toLowerCase())
         )
@@ -202,7 +201,7 @@ const Index = () => {
     if (selectedCidade) {
       // Se cidade está selecionada, verificar cobertura
       const coveringUnits = resellers.filter(r => 
-        r.address.includes(selectedEstado) &&
+        r.state === selectedEstado &&
         r.coveredCities?.some(coveredCity => 
           coveredCity.toLowerCase().includes(selectedCidade.toLowerCase())
         )
@@ -222,7 +221,7 @@ const Index = () => {
     } else {
       // Apenas estado selecionado
       filterByLocation(selectedEstado);
-      const stateUnits = resellers.filter(r => r.address.includes(selectedEstado));
+      const stateUnits = resellers.filter(r => r.state === selectedEstado);
       addNotification(`Encontradas ${stateUnits.length} unidades no estado ${selectedEstado}.`, 'success', 5000);
     }
 
@@ -278,50 +277,7 @@ const Index = () => {
           )}
         </button>
 
-          {/* Lista de Unidades */}
-          <div className="relative group">
-            <button
-              className={`p-1.5 rounded-lg shadow-xl transition-all hover:scale-110 hover:shadow-2xl min-w-[32px] min-h-[32px] flex items-center justify-center ${
-                darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-100' : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
-              }`}
-              title="Lista de Unidades"
-            >
-              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
-              </svg>
-            </button>
-            
-            {/* Dropdown da lista de unidades */}
-            <div className={`absolute right-0 top-full mt-2 w-64 sm:w-72 md:w-80 rounded-lg shadow-xl border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 ${
-              darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-            }`}>
-              <div className="p-3 sm:p-4">
-                <h3 className={`font-semibold mb-2 sm:mb-3 text-sm sm:text-base ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
-                  Unidades Disponíveis
-                </h3>
-                <div className="space-y-2 sm:space-y-3 max-h-60 overflow-y-auto">
-                  {resellers.map((reseller) => (
-                    <button
-                      key={reseller.id}
-                      onClick={() => handleSelectReseller(reseller)}
-                      className={`w-full text-left p-3 sm:p-4 rounded-lg transition-colors hover:bg-nd-orange hover:text-white ${
-                        darkMode ? 'text-gray-200 hover:bg-nd-orange' : 'text-gray-700 hover:bg-nd-orange'
-                      }`}
-                    >
-                      <div className="font-medium text-sm sm:text-base">{reseller.name}</div>
-                      <div className="text-xs sm:text-sm opacity-75 mt-1 sm:mt-1.5">{reseller.address}</div>
-                      {reseller.coverageRadius && (
-                        <div className="text-xs sm:text-sm opacity-60 mt-1 sm:mt-1.5">
-                          Cobertura: {reseller.coverageRadius}km
-                          {reseller.coveredCities && ` • ${reseller.coveredCities.length} cidades`}
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+
 
           {/* Toggle Círculos de Cobertura */}
           <button
@@ -439,42 +395,78 @@ const Index = () => {
 
         {/* Informações de Cobertura do Estado */}
         {selectedEstado && (
-          <div className={`p-3 sm:p-4 border-t ${darkMode ? 'border-gray-700' : 'border-nd-green-light/30'}`}>
-            <h4 className="font-semibold text-xs sm:text-sm mb-1.5 sm:mb-2 flex items-center">
-              <svg className="inline w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"/>
-                </svg>
-              Cobertura em {selectedEstado}
+          <div className={`p-4 border-t ${darkMode ? 'border-gray-700' : 'border-nd-green-light/30'}`}>
+            <div className="flex items-center mb-4">
+              <svg className="w-5 h-5 mr-2" fill="#F2994A" viewBox="0 0 24 24">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              <h4 className="font-bold" style={{fontSize: '14px'}}>
+                {selectedEstado === 'MG' ? 'Minas Gerais' : selectedEstado}
               </h4>
-            <div className="text-xs sm:text-sm space-y-1">
-              <div className="flex justify-between">
-                <span className="opacity-70">Unidades no Estado:</span>
-                <span className="font-semibold">
-                  {mapState.filteredResellers.filter(r => r.address.includes(selectedEstado)).length}
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="#F2994A" viewBox="0 0 24 24">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                  </svg>
+                  <span className="opacity-80" style={{fontSize: '14px'}}>Unidades</span>
+                 </div>
+                 <span className="font-bold" style={{fontSize: '14px'}}>
+                  {mapState.filteredResellers.filter(r => r.state === selectedEstado).length}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="opacity-70">Cidades Atendidas:</span>
-                <span className="font-semibold text-nd-orange">
-                  {cidadesDisponiveis.length}
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="#F2994A" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                  <span className="opacity-80" style={{fontSize: '14px'}}>Cidades atendidas</span>
+                 </div>
+                 <span className="font-bold text-nd-orange" style={{fontSize: '14px'}}>
+                  {Array.from(new Set(
+                    mapState.filteredResellers
+                      .filter(r => r.state === selectedEstado)
+                      .flatMap(r => r.coveredCities || [])
+                  )).length}
                 </span>
               </div>
-              {cidadesDisponiveis.length === 0 && (
-                <div className="mt-1.5 sm:mt-2 text-xs opacity-60 text-yellow-400">
-                  Nenhuma cidade configurada para este estado
-                </div>
-              )}
-              {cidadesDisponiveis.length > 0 && (
-                <div className="mt-1.5 sm:mt-2">
-                  <span className="opacity-70 text-xs">Cidades cobertas:</span>
-                  <div className="text-xs opacity-80 mt-1 max-h-16 sm:max-h-20 overflow-y-auto">
-                    {cidadesDisponiveis.slice(0, 6).join(', ')}
-                    {cidadesDisponiveis.length > 6 && (
-                      ` e mais ${cidadesDisponiveis.length - 6} ${cidadesDisponiveis.length - 6 === 1 ? 'cidade' : 'cidades'}`
-                    )}
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="#F2994A" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                  <span className="opacity-80" style={{fontSize: '14px'}}>Raio médio</span>
+                 </div>
+                 <span className="font-bold" style={{fontSize: '14px'}}>
+                  {mapState.filteredResellers.filter(r => r.state === selectedEstado).length > 0 
+                    ? Math.round(mapState.filteredResellers
+                        .filter(r => r.state === selectedEstado)
+                        .reduce((total, r) => total + (r.coverageRadius || 0), 0) / 
+                        mapState.filteredResellers.filter(r => r.state === selectedEstado).length)
+                    : 0} km
+                </span>
+              </div>
+              
+              <div className="pt-2 border-t border-opacity-20 border-gray-400">
+                <div className="flex items-start">
+                  <svg className="w-4 h-4 mr-2 mt-0.5" fill="#F2994A" viewBox="0 0 24 24">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                  <div className="flex-1">
+                    <div className="opacity-70 mb-1" style={{fontSize: '14px'}}>Unidade física</div>
+                     <div className="font-semibold" style={{fontSize: '14px'}}>
+                      {mapState.filteredResellers
+                        .filter(r => r.state === selectedEstado)
+                        .map(r => r.city)
+                        .join(', ') || 'Nenhuma'}
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         )}
@@ -497,50 +489,7 @@ const Index = () => {
           </div>
         )}
 
-        {/* Estatísticas de Cobertura */}
-        <div className={`p-3 sm:p-4 border-t ${darkMode ? 'border-gray-700' : 'border-nd-green-light/30'}`}>
-          <h4 className="font-semibold text-xs sm:text-sm mb-1.5 sm:mb-2 flex items-center">
-            <svg className="inline w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M16,6L18.29,8.29L13.41,13.17L9.41,9.17L2,16.59L3.41,18L9.41,12L13.41,16L19.71,9.71L22,12V6H16Z"/>
-            </svg>
-            {mapState.filteredResellers.length === resellers.length 
-              ? 'Estatísticas Gerais' 
-              : selectedEstado 
-                ? `Estatísticas - ${selectedEstado}` 
-                : `Estatísticas Filtradas`
-            }
-          </h4>
-          <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
-            <div className="flex justify-between">
-              <span className="opacity-70">Total de Unidades:</span>
-              <span className="font-semibold">{mapState.filteredResellers.length}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="opacity-70">Cidades Cobertas:</span>
-              <span className="font-semibold">
-                {Array.from(new Set(
-                  mapState.filteredResellers.flatMap(r => r.coveredCities || [])
-                )).length}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="opacity-70">Raio Médio:</span>
-              <span className="font-semibold">
-                {mapState.filteredResellers.length > 0 
-                  ? Math.round(mapState.filteredResellers.reduce((total, r) => total + (r.coverageRadius || 0), 0) / mapState.filteredResellers.length)
-                  : 0}km
-              </span>
-            </div>
-            <div className="flex justify-between items-start">
-              <span className="opacity-70">Estados Atendidos:</span>
-              <span className="font-semibold text-xs text-right max-w-[50%]">
-                {mapState.filteredResellers.length > 0 
-                  ? [...new Set(mapState.filteredResellers.map(r => r.address.split(',').pop()?.trim()))].filter(Boolean).join(', ')
-                  : 'Nenhum'}
-              </span>
-            </div>
-          </div>
-        </div>
+
 
         {/* Rodapé da Sidebar */}
         <div className={`p-3 sm:p-4 border-t ${darkMode ? 'border-gray-700' : 'border-nd-green-light/30'}`}>

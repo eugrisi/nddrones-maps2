@@ -7,27 +7,28 @@
 Crie um arquivo `.env.local` na raiz do projeto com as seguintes variáveis:
 
 ```env
-# MySQL Configuration
-VITE_MYSQL_HOST=localhost
-VITE_MYSQL_PORT=3306
-VITE_MYSQL_USER=root
-VITE_MYSQL_PASSWORD=sua_senha
-VITE_MYSQL_DATABASE=nddrones
+# XANO Configuration
+VITE_XANO_INSTANCE_NAME=sua-instancia-xano
+VITE_XANO_WORKSPACE_ID=123
+VITE_XANO_API_TOKEN=sua-chave-api
+VITE_XANO_API_URL=https://sua-instancia.xano.io/api:v1
+VITE_ENABLE_XANO=true
 
 # App Configuration
 VITE_APP_TITLE=ND Drones - Localizador de Unidades
 VITE_APP_DESCRIPTION=Sistema de localização das unidades da ND Drones
 ```
 
-### 2. Configuração do MySQL
+### 2. Configuração do XANO
 
-#### Passo 1: Instalar MySQL
-1. Baixe e instale o MySQL Server
-2. Configure o usuário root com senha
-3. Inicie o serviço MySQL
+#### Passo 1: Criar Conta no XANO
+1. Acesse https://xano.com e crie uma conta
+2. Crie uma nova instância
+3. Obtenha as credenciais de acesso
 
-#### Passo 2: Criar Banco de Dados
-1. Acesse o MySQL via terminal ou MySQL Workbench
+#### Passo 2: Configurar o Backend
+1. Siga o guia em XANO_MIGRATION.md
+2. Configure as variáveis de ambiente
 2. Execute o comando: `CREATE DATABASE nddrones;`
 3. Use o banco: `USE nddrones;`
 
@@ -133,7 +134,7 @@ O sistema inclui as seguintes unidades:
 ## 🔍 Funcionalidades Implementadas
 
 ### ✅ Concluído
-- [x] Integração com MySQL
+- [x] Integração com XANO
 - [x] Mapa interativo com Leaflet
 - [x] Ícones de drone personalizados
 - [x] Busca por localização
@@ -155,9 +156,10 @@ O sistema inclui as seguintes unidades:
 
 ## 🛠️ Troubleshooting
 
-### Erro de Conexão com MySQL
-Se o sistema não conseguir conectar ao MySQL:
-1. Verifique se o MySQL está rodando
+### Erro de Conexão com XANO
+Se o sistema não conseguir conectar ao XANO:
+1. Verifique se as credenciais estão corretas
+2. Confirme se a instância XANO está ativa
 2. Confirme se as credenciais estão corretas no .env.local
 3. Verifique se o banco de dados `nddrones` existe
 4. Confirme se a tabela `resellers` foi criada

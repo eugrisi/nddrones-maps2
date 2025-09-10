@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Reseller } from '@/data/mockData';
+import React, { useState } from 'react';
+import { Reseller } from '@/types/reseller';
 
 interface AdvancedFiltersProps {
   resellers: Reseller[];

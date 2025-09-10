@@ -4,7 +4,7 @@
 
 ### ✅ Implementado
 - [x] Mapa interativo com Leaflet
-- [x] Integração com MySQL
+- [x] Integração com XANO
 - [x] Geolocalização do usuário
 - [x] Modo satélite/mapa
 - [x] Filtros avançados
@@ -129,9 +129,9 @@
 - **PWA** para instalação nativa
 
 ### Backend
-- **MySQL** como banco de dados
-- **Node.js** com Express
-- **MySQL2** para conexão
+- **XANO** como backend-as-a-service
+- **API REST** para comunicação
+- **MCP (Management Control Panel)** para gerenciamento
 - **Redis** para cache
 
 ### DevOps

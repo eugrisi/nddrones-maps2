@@ -25,7 +25,7 @@ import {
   Zap,
   Lock
 } from 'lucide-react';
-import { mockTestConnection, validateMySQLConfig, type MySQLConfig } from '@/lib/mysql';
+import { validateXanoConfig } from '@/lib/xano';
 
 interface SettingsData {
   // Configurações Gerais
@@ -36,7 +36,12 @@ interface SettingsData {
   favicon: string;
   
   // Configurações de Banco
-  database: MySQLConfig;
+  database: {
+    instanceName: string;
+    workspaceId: string;
+    apiUrl: string;
+    enabled: boolean;
+  };
   
   // Configurações de Aparência
   primaryColor: string;
@@ -75,12 +80,10 @@ const defaultSettings: SettingsData = {
   logo: '',
   favicon: '',
   database: {
-    host: 'localhost',
-    port: 3306,
-    database: 'drone_network',
-    user: 'root',
-    password: '',
-    ssl: false
+    instanceName: '',
+    workspaceId: '',
+    apiUrl: '',
+    enabled: false
   },
   primaryColor: '#ea580c',
   secondaryColor: '#f97316',
@@ -144,13 +147,53 @@ export default function AdminSettings() {
 
   const testDatabaseConnection = async () => {
     setTestingConnection(true);
+    setConnectionStatus(null);
+    
     try {
-      const result = await mockTestConnection(settings.database);
-      setConnectionStatus(result);
+      // Create a temporary config object for testing
+      const testConfig = {
+        instanceName: settings.database.instanceName,
+        workspaceId: settings.database.workspaceId,
+        apiToken: '', // Not needed for basic validation
+        baseUrl: settings.database.apiUrl,
+        enabled: settings.database.enabled
+      };
+      
+      // Basic validation
+      const errors: string[] = [];
+      if (!testConfig.enabled) {
+        errors.push('Integração XANO não está habilitada');
+      }
+      if (!testConfig.instanceName) {
+        errors.push('Nome da instância é obrigatório');
+      }
+      if (!testConfig.workspaceId) {
+        errors.push('ID do workspace é obrigatório');
+      }
+      if (!testConfig.baseUrl) {
+        errors.push('URL da API é obrigatória');
+      }
+      
+      const validation = {
+        valid: errors.length === 0,
+        errors
+      };
+      
+      if (validation.valid) {
+        setConnectionStatus({
+          success: true,
+          message: 'Configuração XANO válida! Salve as configurações para aplicar.'
+        });
+      } else {
+        setConnectionStatus({
+          success: false,
+          message: `Configuração inválida: ${validation.errors.join(', ')}`
+        });
+      }
     } catch (error) {
       setConnectionStatus({
         success: false,
-        message: 'Erro ao testar conexão: ' + (error instanceof Error ? error.message : 'Erro desconhecido')
+        message: 'Erro ao validar configuração XANO'
       });
     } finally {
       setTestingConnection(false);
@@ -162,7 +205,7 @@ export default function AdminSettings() {
     setHasChanges(true);
   };
 
-  const updateDatabaseSettings = (key: keyof MySQLConfig, value: string | number | boolean) => {
+  const updateDatabaseSettings = (key: string, value: string | number | boolean) => {
     setSettings(prev => ({
       ...prev,
       database: { ...prev.database, [key]: value }
@@ -293,73 +336,50 @@ export default function AdminSettings() {
         <TabsContent value="database" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Configurações do MySQL</CardTitle>
-              <CardDescription>
-                Configure a conexão com o banco de dados MySQL
+              <CardTitle>Configurações do XANO</CardTitle>
+                <CardDescription>
+                  Configure a conexão com o backend XANO
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="dbHost">Host do Banco</Label>
+                  <Label htmlFor="instanceName">Nome da Instância XANO</Label>
                   <Input
-                    id="dbHost"
-                    value={settings.database.host}
-                    onChange={(e) => updateDatabaseSettings('host', e.target.value)}
-                    placeholder="localhost"
+                    id="instanceName"
+                    value={settings.database.instanceName}
+                    onChange={(e) => updateDatabaseSettings('instanceName', e.target.value)}
+                    placeholder="xnwv-v1z6-dvnr"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="dbPort">Porta</Label>
+                  <Label htmlFor="workspaceId">ID do Workspace</Label>
                   <Input
-                    id="dbPort"
-                    type="number"
-                    value={settings.database.port}
-                    onChange={(e) => updateDatabaseSettings('port', parseInt(e.target.value))}
-                    placeholder="3306"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="dbName">Nome do Banco</Label>
-                  <Input
-                    id="dbName"
-                    value={settings.database.database}
-                    onChange={(e) => updateDatabaseSettings('database', e.target.value)}
-                    placeholder="drone_network"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="dbUser">Usuário</Label>
-                  <Input
-                    id="dbUser"
-                    value={settings.database.user}
-                    onChange={(e) => updateDatabaseSettings('user', e.target.value)}
-                    placeholder="root"
+                    id="workspaceId"
+                    value={settings.database.workspaceId}
+                    onChange={(e) => updateDatabaseSettings('workspaceId', e.target.value)}
+                    placeholder="123"
                   />
                 </div>
               </div>
               
               <div>
-                <Label htmlFor="dbPassword">Senha</Label>
+                <Label htmlFor="apiUrl">URL da API XANO</Label>
                 <Input
-                  id="dbPassword"
-                  type="password"
-                  value={settings.database.password}
-                  onChange={(e) => updateDatabaseSettings('password', e.target.value)}
-                  placeholder="••••••••"
+                  id="apiUrl"
+                  value={settings.database.apiUrl}
+                  onChange={(e) => updateDatabaseSettings('apiUrl', e.target.value)}
+                  placeholder="https://sua-instancia.xano.io/api:v1"
                 />
               </div>
               
               <div className="flex items-center space-x-2">
                 <Switch
-                  id="dbSsl"
-                  checked={settings.database.ssl}
-                  onCheckedChange={(checked) => updateDatabaseSettings('ssl', checked)}
+                  id="xanoEnabled"
+                  checked={settings.database.enabled}
+                  onCheckedChange={(checked) => updateDatabaseSettings('enabled', checked)}
                 />
-                <Label htmlFor="dbSsl">Usar SSL</Label>
+                <Label htmlFor="xanoEnabled">Habilitar Integração XANO</Label>
               </div>
               
               <Separator />
@@ -371,7 +391,7 @@ export default function AdminSettings() {
                   variant="outline"
                 >
                   <TestTube className="w-4 h-4 mr-2" />
-                  {testingConnection ? 'Testando...' : 'Testar Conexão'}
+                  {testingConnection ? 'Validando...' : 'Validar Configuração XANO'}
                 </Button>
                 
                 {connectionStatus && (

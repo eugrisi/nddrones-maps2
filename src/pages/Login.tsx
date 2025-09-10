@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { login } from '@/lib/auth';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -20,11 +21,12 @@ const Login = () => {
 
     // Simular verificação de login
     setTimeout(() => {
-      if (username === 'admin' && password === 'nddrones2024') {
-        localStorage.setItem('isAuthenticated', 'true');
+      const result = login(username, password);
+      
+      if (result.success && result.user) {
         navigate('/admin');
       } else {
-        setError('Usuário ou senha incorretos');
+        setError(result.error || 'Erro ao fazer login');
       }
       setLoading(false);
     }, 1000);
@@ -132,4 +134,4 @@ const Login = () => {
   );
 };
 
-export default Login; 
+export default Login;

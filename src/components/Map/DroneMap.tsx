@@ -1,7 +1,7 @@
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Reseller } from '@/data/mockData';
+import { Reseller } from '@/types/reseller';
 import { useEffect } from 'react';
 
 interface DroneMapProps {
@@ -167,6 +167,15 @@ const DroneMap = ({ resellers, center, zoom, darkMode = false, mapType = 'tradit
                   Unidade Regional
                 </span>
                 
+                {/* Descrição */}
+                {reseller.description && (
+                  <div className="mb-2 sm:mb-3">
+                    <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
+                      {reseller.description}
+                    </p>
+                  </div>
+                )}
+                
                 {/* Lista de informações */}
                 <div className="flex flex-col gap-2 sm:gap-2.5">
                   {/* Endereço */}
@@ -194,13 +203,29 @@ const DroneMap = ({ resellers, center, zoom, darkMode = false, mapType = 'tradit
                     <span>{reseller.email}</span>
                   </div>
                   
+                  {/* Website */}
+                  {reseller.website && (
+                    <div className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 sm:w-[18px] sm:h-[18px] text-gray-500 flex-shrink-0">
+                        <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                        <path strokeWidth="2" d="M2 12h20" />
+                        <path strokeWidth="2" d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                      </svg>
+                      <a href={reseller.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 hover:underline">
+                        {reseller.website.replace(/^https?:\/\//, '')}
+                      </a>
+                    </div>
+                  )}
+                  
                   {/* Raio */}
                   {reseller.coverageRadius && (
                     <div className="flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 sm:w-[18px] sm:h-[18px] text-gray-500 flex-shrink-0">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4"/>
+                        <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
+                        <circle cx="12" cy="12" r="6" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
+                        <circle cx="12" cy="12" r="2" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"/>
                       </svg>
-                      <span>Raio: {reseller.serviceRadius} km</span>
+                      <span>Raio: {reseller.coverageRadius} km</span>
                     </div>
                   )}
                   
